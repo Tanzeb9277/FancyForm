@@ -73,7 +73,7 @@ function findMatchingNamesFrontend(searchValue = "Bobs Burger") {
   const EMAIL_COLUMN = 3; // Column C for email
 
   const data = sheet.getDataRange().getValues();
-  const matchingNames = [];
+  const matchingEntries = []; // Changed from matchingNames to matchingEntries
   const trimmedSearchValue = String(searchValue).trim().toLowerCase();
   const now = new Date();
 
@@ -115,7 +115,10 @@ function findMatchingNamesFrontend(searchValue = "Bobs Burger") {
 
           if (timeDifference <= 2400) {
             if (row.length > NAMES_COLUMN - 1 && row[NAMES_COLUMN - 1] !== undefined) {
-              matchingNames.push(row[NAMES_COLUMN - 1]);
+              matchingEntries.push({
+                name: row[NAMES_COLUMN - 1],
+                email: row[EMAIL_COLUMN - 1]
+              });
             }
           }
           Logger.log(`Search: ${trimmedSearchValue}, Entry Time (Parsed): ${timeValue}, Diff: ${timeDifference}`);
@@ -129,5 +132,5 @@ function findMatchingNamesFrontend(searchValue = "Bobs Burger") {
     }
   }
 
-  return JSON.stringify(matchingNames);
+  return JSON.stringify(matchingEntries);
 }

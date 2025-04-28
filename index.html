@@ -595,7 +595,7 @@
       }
 
       function displaySearchResults(matchingNamesJson) {
-        const matchingNames = JSON.parse(matchingNamesJson)
+        const matchingEntries = JSON.parse(matchingNamesJson)
         const resultsContainer = document.getElementById("results-container")
         const resultsList = document.getElementById("results-list")
         const loadingSpinner = document.getElementById("loadingSpinner")
@@ -604,10 +604,31 @@
         loadingSpinner.style.display = "none"
         resultsList.style.display = "block"
 
-        if (matchingNames.length > 0) {
-          matchingNames.forEach(function (name) {
+        if (matchingEntries.length > 0) {
+          matchingEntries.forEach(function (entry) {
             const listItem = document.createElement("li")
-            listItem.textContent = name
+            const nameSpan = document.createElement("span")
+            nameSpan.textContent = entry.name
+            listItem.appendChild(nameSpan)
+
+            const chatButton = document.createElement("button")
+            chatButton.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>'
+            chatButton.style.marginLeft = "10px"
+            chatButton.style.padding = "4px 8px"
+            chatButton.style.border = "none"
+            chatButton.style.borderRadius = "4px"
+            chatButton.style.backgroundColor = "transparent"
+            chatButton.style.cursor = "pointer"
+            chatButton.style.display = "flex"
+            chatButton.style.alignItems = "center"
+            chatButton.style.gap = "4px"
+            chatButton.title = "Open Chat"
+            chatButton.onclick = function() {
+              window.open(`https://mail.google.com/chat/u/0/#chat/search/${entry.email}`, '_blank')
+            }
+            listItem.appendChild(chatButton)
+
+            listItem.setAttribute('data-email', entry.email)
             resultsList.appendChild(listItem)
           })
         } else {
