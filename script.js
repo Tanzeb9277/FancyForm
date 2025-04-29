@@ -32,10 +32,14 @@ function submitQuery(submissionData) {
       sheet.getRange(i + 1, 1).setValue(date) // Update date in Column A
       sheet.getRange(i + 1, 2).setValue(time) // Update time in Column B
       
+      // Check QA rating for the query
+      const qaRatingResult = JSON.parse(checkQARating(query))
+      
       return {
         submitted: true,
         message: "Existing query updated with new timestamp.",
         query: query,
+        qaRating: qaRatingResult
       }
     }
   }
@@ -45,17 +49,22 @@ function submitQuery(submissionData) {
   const date = Utilities.formatDate(now, "America/New_York", "yyyy-MM-dd")
   const time = Utilities.formatDate(now, "America/New_York", "HH:mm:ss")
   sheet.appendRow([date, time, email, query])
+
+  // Check QA rating for the new query
+  const qaRatingResult = JSON.parse(checkQARating(query))
+  
   return {
     submitted: true,
     message: "Query submitted successfully!",
     query: query,
+    qaRating: qaRatingResult
   }
 }
 
 function findMatchingNamesFrontend(searchValue = "Bobs Burger") {
   // Get the spreadsheet and the specific sheet by name
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = "query Data"; // Specify the sheet name
+  const sheetName = "queryData"; // Specify the sheet name
   const sheet = ss.getSheetByName(sheetName);
 
   // Get the current user's email
@@ -133,4 +142,99 @@ function findMatchingNamesFrontend(searchValue = "Bobs Burger") {
   }
 
   return JSON.stringify(matchingEntries);
+}
+
+function flagTask(id, flag, targetSentence, email) {
+  // Get the spreadsheet and the specific sheet by name
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetName = "queryData";
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    return JSON.stringify({ error: `Sheet "${sheetName}" not found.` });
+  }
+
+  // Define column indices
+  const SEARCH_COLUMN = 4; // Column D for search query
+  const EMAIL_COLUMN = 3;  // Column C for email
+  const ID_COLUMN = 5;     // Column E for ID
+  const FLAG_COLUMN = 6;   // Column F for flag
+
+  const data = sheet.getDataRange().getValues();
+  const trimmedTarget = String(targetSentence).trim().toLowerCase();
+  const trimmedEmail = String(email).trim().toLowerCase();
+
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const rowSearch = String(row[SEARCH_COLUMN - 1]).trim().toLowerCase();
+    const rowEmail = String(row[EMAIL_COLUMN - 1]).trim().toLowerCase();
+
+    if (rowSearch === trimmedTarget && rowEmail === trimmedEmail) {
+      // Update the ID and flag columns
+      sheet.getRange(i + 1, ID_COLUMN).setValue(id);
+      sheet.getRange(i + 1, FLAG_COLUMN).setValue(flag);
+      
+      return JSON.stringify({ 
+        success: true, 
+        message: "Task flagged successfully",
+        row: i + 1
+      });
+    }
+  }
+
+  return JSON.stringify({ 
+    error: "No matching row found with the given target sentence and email"
+  });
+}
+
+function checkQARating(targetSentence = "Sponge Bob") {
+  // Get the spreadsheet and the specific sheet by name
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheetName = "QARatings";
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    return JSON.stringify({ error: `Sheet "${sheetName}" not found.` });
+  }
+
+  // Define column indices
+  const TARGET_COLUMN = 1;  // Column A for target sentence
+  const RATING_COLUMN = 4;  // Column D for rating
+  const REASONING_COLUMN = 5; // Column E for QA reasoning
+
+  const data = sheet.getDataRange().getValues();
+  const trimmedTarget = String(targetSentence).trim().toLowerCase();
+
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const rowTarget = String(row[TARGET_COLUMN - 1]).trim().toLowerCase();
+
+    if (rowTarget === trimmedTarget) {
+      const rating = row[RATING_COLUMN - 1];
+      const reasoning = row[REASONING_COLUMN - 1];
+
+      if (!rating || rating === "") {
+        return JSON.stringify({ 
+          status: "awaiting",
+          message: "Awaiting QA Rating"
+        });
+      } else {
+        Logger.log(JSON.stringify({ 
+          status: "rated",
+          rating: rating,
+          reasoning: reasoning || ""
+        }))
+        return JSON.stringify({ 
+          status: "rated",
+          rating: rating,
+          reasoning: reasoning || ""
+        });
+        
+      }
+    }
+  }
+
+  return JSON.stringify({ 
+    error: "No matching target sentence found in QARatings sheet"
+  });
 }

@@ -136,6 +136,198 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       }
 
+      #qa-rating-container {
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        display: none;
+      }
+
+      #qa-rating-container.awaiting {
+        background: rgba(255, 193, 7, 0.1);
+        border-left: 4px solid #ffc107;
+      }
+
+      #qa-rating-container.rated {
+        background: rgba(76, 175, 80, 0.1);
+        border-left: 4px solid #4caf50;
+      }
+
+      #qa-rating-container.error {
+        background: rgba(244, 67, 54, 0.1);
+        border-left: 4px solid #f44336;
+      }
+
+      #flag-container {
+        display: none;
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      #flag-container.active {
+        display: block;
+      }
+
+      .flag-options {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+      }
+
+      .flag-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        flex: 1;
+        min-width: 120px;
+      }
+
+      .flag-option input[type="radio"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.3);
+        transition: all 0.3s ease;
+        margin: 0;
+        padding: 0;
+        position: relative;
+      }
+
+      .flag-option input[type="radio"]:checked {
+        background: #4285f4;
+        border-color: #4285f4;
+        box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+      }
+
+      .flag-option input[type="radio"]:checked::after {
+        content: '';
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: white;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .flag-option label {
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+
+      #task-id-input {
+        display: none;
+        margin-top: 15px;
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      #task-id-input.active {
+        display: block;
+      }
+
+      #task-id-input input {
+        width: 100%;
+        height: 50px;
+        padding: 0 60px 0 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: rgba(0, 0, 0, 0.3);
+        color: rgba(255, 255, 255, 0.9);
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        box-sizing: border-box;
+      }
+
+      #task-id-input input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      #task-id-input input:focus {
+        outline: none;
+        border-color: #4285f4;
+        box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.2);
+      }
+
+      #task-id-submit {
+        position: absolute;
+        right: 5px;
+        top: 5px;
+        background-color: #4285f4;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      #task-id-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        background-color: #3367d6;
+      }
+
+      #task-id-submit:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+      }
+
+      #task-id-submit svg {
+        width: 20px;
+        height: 20px;
+        fill: #ffffff;
+      }
+
+      #flag-submit-button {
+        display: none;
+      }
+
+      .qa-rating-header {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #333;
+      }
+
+      .qa-rating-content {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .qa-reasoning {
+        margin-top: 8px;
+        font-style: italic;
+        color: #555;
+      }
+
       #results-container h3 {
         background: transparent;
         color: #000000;
@@ -508,6 +700,31 @@
       </form>
 
       <div id="results-container" style="display: none">
+        <div id="flag-container">
+          <div class="flag-options">
+            <div class="flag-option">
+              <input type="radio" id="flag-cca" name="flag-type" value="cca">
+              <label for="flag-cca">CCA</label>
+            </div>
+            <div class="flag-option">
+              <input type="radio" id="flag-formatting" name="flag-type" value="formatting">
+              <label for="flag-formatting">Formatting Issue</label>
+            </div>
+          </div>
+          <div id="task-id-input">
+            <input type="text" id="taskIdInput" placeholder="Enter Task ID" autocomplete="off">
+            <button type="button" id="task-id-submit" onclick="submitFlag()">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="qa-rating-container">
+          <div class="qa-rating-header">QA Rating</div>
+          <div class="qa-rating-content"></div>
+          <div class="qa-reasoning"></div>
+        </div>
         <h3>Raters</h3>
         <div class="loading-spinner" id="loadingSpinner">
           <div class="sonar"></div>
@@ -567,7 +784,41 @@
         })
 
       function handleSubmissionResult(result) {
-        performSearch(result.query)
+        // Display QA rating if available
+        const qaRatingContainer = document.getElementById('qa-rating-container');
+        const qaRatingContent = qaRatingContainer.querySelector('.qa-rating-content');
+        const qaReasoning = qaRatingContainer.querySelector('.qa-reasoning');
+        const flagContainer = document.getElementById('flag-container');
+        const taskIdInput = document.getElementById('task-id-input');
+        
+        if (result.qaRating) {
+          // The qaRating is already parsed from the backend
+          const qaRating = result.qaRating;
+          
+          if (qaRating.status === 'awaiting') {
+            qaRatingContainer.style.display = 'none';
+            flagContainer.classList.add('active');
+            qaRatingContent.textContent = qaRating.message;
+            qaReasoning.textContent = '';
+          } else {
+            qaRatingContainer.style.display = 'block';
+            flagContainer.classList.remove('active');
+            qaRatingContainer.className = 'qa-rating-container ' + qaRating.status;
+            
+            if (qaRating.status === 'rated') {
+              qaRatingContent.textContent = `Rating: ${qaRating.rating}`;
+              qaReasoning.textContent = qaRating.reasoning ? `Reasoning: ${qaRating.reasoning}` : '';
+            } else {
+              qaRatingContent.textContent = qaRating.error;
+              qaReasoning.textContent = '';
+            }
+          }
+        } else {
+          qaRatingContainer.style.display = 'none';
+          flagContainer.classList.remove('active');
+        }
+        
+        performSearch(result.query);
       }
 
       function handleError(error) {
@@ -595,7 +846,7 @@
       }
 
       function displaySearchResults(matchingNamesJson) {
-        const matchingEntries = JSON.parse(matchingNamesJson)
+        const matchingNames = JSON.parse(matchingNamesJson)
         const resultsContainer = document.getElementById("results-container")
         const resultsList = document.getElementById("results-list")
         const loadingSpinner = document.getElementById("loadingSpinner")
@@ -604,31 +855,56 @@
         loadingSpinner.style.display = "none"
         resultsList.style.display = "block"
 
-        if (matchingEntries.length > 0) {
-          matchingEntries.forEach(function (entry) {
+        if (matchingNames.length > 0) {
+          matchingNames.forEach(function (entry) {
             const listItem = document.createElement("li")
-            const nameSpan = document.createElement("span")
-            nameSpan.textContent = entry.name
-            listItem.appendChild(nameSpan)
-
+            
+            // Create a container for the name and chat button
+            const contentContainer = document.createElement("div")
+            contentContainer.style.display = "flex"
+            contentContainer.style.alignItems = "center"
+            contentContainer.style.justifyContent = "space-between"
+            contentContainer.style.width = "100%"
+            
+            // Create name text
+            const nameText = document.createElement("span")
+            nameText.textContent = entry.name
+            contentContainer.appendChild(nameText)
+            
+            // Create chat button
             const chatButton = document.createElement("button")
-            chatButton.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>'
-            chatButton.style.marginLeft = "10px"
-            chatButton.style.padding = "4px 8px"
+            chatButton.innerHTML = `
+              <svg viewBox="0 0 24 24" width="20" height="20" style="fill: currentColor;">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+              </svg>
+            `
+            chatButton.style.background = "none"
             chatButton.style.border = "none"
-            chatButton.style.borderRadius = "4px"
-            chatButton.style.backgroundColor = "transparent"
             chatButton.style.cursor = "pointer"
+            chatButton.style.padding = "8px"
+            chatButton.style.borderRadius = "50%"
             chatButton.style.display = "flex"
             chatButton.style.alignItems = "center"
-            chatButton.style.gap = "4px"
-            chatButton.title = "Open Chat"
-            chatButton.onclick = function() {
-              window.open(`https://mail.google.com/chat/u/0/#chat/search/${entry.email}`, '_blank')
-            }
-            listItem.appendChild(chatButton)
-
-            listItem.setAttribute('data-email', entry.email)
+            chatButton.style.justifyContent = "center"
+            chatButton.style.transition = "all 0.3s ease"
+            chatButton.style.color = "#4285f4"
+            
+            chatButton.addEventListener("mouseover", () => {
+              chatButton.style.backgroundColor = "rgba(66, 133, 244, 0.1)"
+              chatButton.style.transform = "scale(1.1)"
+            })
+            
+            chatButton.addEventListener("mouseout", () => {
+              chatButton.style.backgroundColor = "transparent"
+              chatButton.style.transform = "scale(1)"
+            })
+            
+            chatButton.addEventListener("click", () => {
+              window.open(`https://mail.google.com/chat/u/0/#chat/${entry.email}`, '_blank')
+            })
+            
+            contentContainer.appendChild(chatButton)
+            listItem.appendChild(contentContainer)
             resultsList.appendChild(listItem)
           })
         } else {
@@ -920,6 +1196,48 @@
           console.error('Failed to read clipboard contents: ', err);
         }
       }
+
+      // Add flag handling functionality
+      document.querySelectorAll('input[name="flag-type"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          const taskIdInput = document.getElementById('task-id-input');
+          const flagSubmitButton = document.getElementById('flag-submit-button');
+          
+          if (e.target.checked) {
+            taskIdInput.classList.add('active');
+            flagSubmitButton.classList.add('active');
+          }
+        });
+      });
+
+      function submitFlag() {
+        const selectedFlag = document.querySelector('input[name="flag-type"]:checked');
+        const taskId = document.getElementById('taskIdInput').value;
+        const query = document.getElementById('queryInput').value;
+        
+        if (selectedFlag && taskId) {
+          google.script.run
+            .withSuccessHandler(() => {
+              // Hide flag container and show QA rating container
+              document.getElementById('flag-container').classList.remove('active');
+              document.getElementById('qa-rating-container').style.display = 'block';
+              
+              // Reset form
+              document.querySelector('input[name="flag-type"]:checked').checked = false;
+              document.getElementById('taskIdInput').value = '';
+              document.getElementById('task-id-input').classList.remove('active');
+              document.getElementById('flag-submit-button').classList.remove('active');
+            })
+            .withFailureHandler(handleError)
+            .flagTask({
+              targetSentence: query,
+              taskId: taskId,
+              flag: selectedFlag.value
+            });
+        }
+      }
+
+      document.getElementById('flag-submit-button').addEventListener('click', submitFlag);
     </script>
   </body>
 </html>
