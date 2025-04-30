@@ -6,7 +6,7 @@ function doGet() {
 
 function submitQuery(submissionData) {
   const sheet =
-    SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Query Data")
+    SpreadsheetApp.getActiveSpreadsheet().getSheetByName("QueryData")
   if (!sheet) {
     throw new Error("Sheet 'Query Data' not found.")
   }
@@ -144,7 +144,7 @@ function findMatchingNamesFrontend(searchValue = "Bobs Burger") {
   return JSON.stringify(matchingEntries);
 }
 
-function flagTask(id, flag, targetSentence, email) {
+function flagTask(flagData) {
   // Get the spreadsheet and the specific sheet by name
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheetName = "queryData";
@@ -161,8 +161,8 @@ function flagTask(id, flag, targetSentence, email) {
   const FLAG_COLUMN = 6;   // Column F for flag
 
   const data = sheet.getDataRange().getValues();
-  const trimmedTarget = String(targetSentence).trim().toLowerCase();
-  const trimmedEmail = String(email).trim().toLowerCase();
+  const trimmedTarget = String(flagData.targetSentence).trim().toLowerCase();
+  const trimmedEmail = String(Session.getActiveUser().getEmail()).trim().toLowerCase();
 
   for (let i = 0; i < data.length; i++) {
     const row = data[i];
@@ -171,8 +171,8 @@ function flagTask(id, flag, targetSentence, email) {
 
     if (rowSearch === trimmedTarget && rowEmail === trimmedEmail) {
       // Update the ID and flag columns
-      sheet.getRange(i + 1, ID_COLUMN).setValue(id);
-      sheet.getRange(i + 1, FLAG_COLUMN).setValue(flag);
+      sheet.getRange(i + 1, ID_COLUMN).setValue(flagData.taskId);
+      sheet.getRange(i + 1, FLAG_COLUMN).setValue(flagData.flag);
       
       return JSON.stringify({ 
         success: true, 
