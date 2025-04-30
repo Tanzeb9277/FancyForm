@@ -926,6 +926,12 @@
         const qaReasoning = qaRatingContainer.querySelector('.qa-reasoning');
         const flagContainer = document.getElementById('flag-container');
         const taskIdInput = document.getElementById('task-id-input');
+        const taskIdSubmit = document.getElementById('task-id-submit');
+        
+        // Reset task ID submit button state
+        if (taskIdSubmit) {
+          taskIdSubmit.classList.remove('loading');
+        }
         
         if (result.qaRating) {
           // The qaRating is already parsed from the backend
@@ -1197,16 +1203,22 @@
           el.style.color = textColor;
         });
 
-        // Update container backgrounds
-        document.querySelectorAll('.container, #results-container, .color-menu, .custom-bg-input').forEach(el => {
-          el.style.background = containerBg;
-        });
-
         // Update input styles
         document.querySelectorAll('input').forEach(el => {
           el.style.background = inputBg;
           el.style.borderColor = inputBorder;
           el.style.color = textColor;
+        });
+
+        // Set task ID input text color to black
+        const taskIdInput = document.getElementById('taskIdInput');
+        if (taskIdInput) {
+          taskIdInput.style.color = '#000000';
+        }
+
+        // Update container backgrounds
+        document.querySelectorAll('.container, #results-container, .color-menu, .custom-bg-input').forEach(el => {
+          el.style.background = containerBg;
         });
 
         // Update button colors
