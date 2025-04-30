@@ -77,7 +77,7 @@ function findMatchingNamesFrontend(searchValue = "Bobs Burger") {
 
   // Define column indices
   const SEARCH_COLUMN = 4;
-  const NAMES_COLUMN = 6;
+  const NAMES_COLUMN = 8;
   const TIME_COLUMN = 2;
   const EMAIL_COLUMN = 3; // Column C for email
 
