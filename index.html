@@ -85,11 +85,29 @@
         font-weight: 400;
       }
 
-      input::placeholder {
+      textarea {
+        width: 100%;
+        height: 50px;
+        padding: 15px 100px 15px 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        font-family: 'Inter', sans-serif;
+        font-weight: 400;
+        resize: none;
+        overflow: hidden;
+        min-height: 50px;
+        max-height: 150px;
+      }
+
+      textarea::placeholder {
         color: rgba(255, 255, 255, 0.6);
       }
 
-      input:focus {
+      textarea:focus {
         outline: none;
         border-color: #ffffff;
         box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
@@ -403,6 +421,37 @@
         font-weight: 600;
         margin-bottom: 8px;
         color: #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .qa-refresh-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        color: #4285f4;
+      }
+
+      .qa-refresh-button:hover {
+        background-color: rgba(66, 133, 244, 0.1);
+        transform: rotate(180deg);
+      }
+
+      .qa-refresh-button.loading {
+        animation: spin 1s linear infinite;
+      }
+
+      .qa-refresh-button svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
       }
 
       .qa-rating-content {
@@ -796,14 +845,93 @@
         height: 20px;
         fill: currentColor;
       }
+
+      .target-card {
+        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .target-sentence-content {
+        color: #333;
+        font-size: 16px;
+        line-height: 1.5;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.03);
+        border-radius: 8px;
+        margin-top: 10px;
+      }
+
+      body[style*="background-image"] .target-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .target-sentence-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .action-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(0, 0, 0, 0.05);
+        color: #333;
+      }
+
+      .action-button:hover {
+        background: rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+      }
+
+      .action-button:active {
+        transform: translateY(0);
+      }
+
+      .action-button svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+      }
+
+      .copy-button {
+        background: rgba(66, 133, 244, 0.1);
+        color: #4285f4;
+      }
+
+      .copy-button:hover {
+        background: rgba(66, 133, 244, 0.2);
+      }
+
+      .google-button {
+        background: rgba(234, 67, 53, 0.1);
+        color: #ea4335;
+      }
+
+      .google-button:hover {
+        background: rgba(234, 67, 53, 0.2);
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h2>FloorGPT 2.1 Beta</h2>
+      <h2>FloorGPT 2.3 Beta</h2>
       <form id="queryForm">
         <div class="input-container">
-          <input type="text" name="query" id="queryInput" placeholder="Enter your query here..." required autocomplete="off" />
+          <textarea name="query" id="queryInput" placeholder="Enter your query here..." required autocomplete="off"></textarea>
           <button type="button" class="paste-button" onclick="pasteToInput('queryInput')">
             <svg viewBox="0 0 24 24">
               <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"/>
@@ -820,6 +948,36 @@
       </form>
 
       <div id="results-container" style="display: none">
+        <div id="target-sentence-card" class="target-card">
+          <h3>Target Sentence</h3>
+          <div class="target-sentence-content"></div>
+          <div class="target-sentence-actions">
+            <button class="action-button copy-button" onclick="copyTargetSentence()">
+              <svg viewBox="0 0 24 24">
+                <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"/>
+              </svg>
+              Copy
+            </button>
+            <button class="action-button google-button" onclick="searchGoogle()">
+              <svg viewBox="0 0 24 24">
+                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+              </svg>
+              Google
+            </button>
+          </div>
+        </div>
+        <div id="qa-rating-container">
+          <div class="qa-rating-header">
+            QA Rating
+            <button class="qa-refresh-button" onclick="refreshQARating()">
+              <svg viewBox="0 0 24 24">
+                <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="qa-rating-content"></div>
+          <div class="qa-reasoning"></div>
+        </div>
         <div id="flag-container">
           <div class="flag-options">
             <label class="flag-option">
@@ -840,11 +998,6 @@
               </svg>
             </button>
           </div>
-        </div>
-        <div id="qa-rating-container">
-          <div class="qa-rating-header">QA Rating</div>
-          <div class="qa-rating-content"></div>
-          <div class="qa-reasoning"></div>
         </div>
         <h3>Raters
           <button class="refresh-button" onclick="refreshResults()">
@@ -920,10 +1073,16 @@
         });
 
       function handleSubmissionResult(result) {
+        // Display target sentence
+        const targetSentenceCard = document.getElementById('target-sentence-card');
+        const targetSentenceContent = targetSentenceCard.querySelector('.target-sentence-content');
+        targetSentenceContent.textContent = result.query || 'No target sentence available';
+        
         // Display QA rating if available
         const qaRatingContainer = document.getElementById('qa-rating-container');
         const qaRatingContent = qaRatingContainer.querySelector('.qa-rating-content');
         const qaReasoning = qaRatingContainer.querySelector('.qa-reasoning');
+        const qaRefreshButton = qaRatingContainer.querySelector('.qa-refresh-button');
         const flagContainer = document.getElementById('flag-container');
         const taskIdInput = document.getElementById('task-id-input');
         const taskIdSubmit = document.getElementById('task-id-submit');
@@ -942,10 +1101,12 @@
             flagContainer.classList.add('active');
             qaRatingContent.textContent = qaRating.message;
             qaReasoning.textContent = '';
+            qaRefreshButton.style.display = 'none';
           } else {
             qaRatingContainer.style.display = 'block';
             flagContainer.classList.remove('active');
             qaRatingContainer.className = 'qa-rating-container ' + qaRating.status;
+            qaRefreshButton.style.display = 'flex';
             
             if (qaRating.status === 'rated') {
               qaRatingContent.textContent = `Rating: ${qaRating.rating}`;
@@ -1210,10 +1371,14 @@
           el.style.color = textColor;
         });
 
-        // Set task ID input text color to black
+        // Set task ID input text color to black and add outline
         const taskIdInput = document.getElementById('taskIdInput');
         if (taskIdInput) {
           taskIdInput.style.color = '#000000';
+          taskIdInput.style.outline = '2px solid rgba(66, 133, 244, 0.5)';
+          taskIdInput.style.outlineOffset = '2px';
+          taskIdInput.style.borderRadius = '25px';
+          taskIdInput.style.transition = 'outline 0.3s ease';
         }
 
         // Update container backgrounds
@@ -1308,6 +1473,12 @@
           img.onerror = function() {
             console.log('Error loading image for color extraction');
             updateTextColors(0, '#e8f0fe');
+            // Ensure task ID input has outline even on error
+            const taskIdInput = document.getElementById('taskIdInput');
+            if (taskIdInput) {
+              taskIdInput.style.outline = '2px solid rgba(66, 133, 244, 0.5)';
+              taskIdInput.style.outlineOffset = '2px';
+            }
           };
           
           // Try to load the image
@@ -1320,14 +1491,32 @@
                 const brightness = getImageBrightness(img);
                 const prominentColor = getProminentColor(img);
                 updateTextColors(brightness, prominentColor);
+                // Ensure task ID input has outline after successful color update
+                const taskIdInput = document.getElementById('taskIdInput');
+                if (taskIdInput) {
+                  taskIdInput.style.outline = '2px solid rgba(66, 133, 244, 0.5)';
+                  taskIdInput.style.outlineOffset = '2px';
+                }
               } catch (error) {
                 console.log('Error processing image:', error);
                 updateTextColors(0, '#e8f0fe');
+                // Ensure task ID input has outline even on error
+                const taskIdInput = document.getElementById('taskIdInput');
+                if (taskIdInput) {
+                  taskIdInput.style.outline = '2px solid rgba(66, 133, 244, 0.5)';
+                  taskIdInput.style.outlineOffset = '2px';
+                }
               }
             };
           } catch (error) {
             console.log('Error setting image source:', error);
             updateTextColors(0, '#e8f0fe');
+            // Ensure task ID input has outline even on error
+            const taskIdInput = document.getElementById('taskIdInput');
+            if (taskIdInput) {
+              taskIdInput.style.outline = '2px solid rgba(66, 133, 244, 0.5)';
+              taskIdInput.style.outlineOffset = '2px';
+            }
           }
         }
       }
@@ -1397,7 +1586,8 @@
       function submitFlag() {
         const selectedFlag = document.querySelector('input[name="flag-type"]:checked');
         const taskId = document.getElementById('taskIdInput').value;
-        const query = document.getElementById('queryInput').value;
+        const targetSentenceContent = document.querySelector('.target-sentence-content');
+        const query = targetSentenceContent.textContent;
         
         if (selectedFlag && taskId) {
           const submitButton = document.getElementById('task-id-submit');
@@ -1430,7 +1620,69 @@
         }
       }
 
-      document.getElementById('flag-submit-button').addEventListener('click', submitFlag);
+      function refreshQARating() {
+        const refreshButton = document.querySelector('.qa-refresh-button');
+        refreshButton.classList.add('loading');
+        
+        const query = document.getElementById('queryInput').value;
+        if (query) {
+          google.script.run
+            .withSuccessHandler((result) => {
+              refreshButton.classList.remove('loading');
+              handleSubmissionResult(result);
+            })
+            .withFailureHandler((error) => {
+              refreshButton.classList.remove('loading');
+              handleError(error);
+            })
+            .submitQuery({ query: query });
+        }
+      }
+
+      async function copyTargetSentence() {
+        const targetSentenceContent = document.querySelector('.target-sentence-content');
+        const text = targetSentenceContent.textContent;
+        
+        try {
+          await navigator.clipboard.writeText(text);
+          const button = document.querySelector('.copy-button');
+          button.style.backgroundColor = 'rgba(52, 168, 83, 0.2)';
+          button.style.color = '#34a853';
+          button.innerHTML = `
+            <svg viewBox="0 0 24 24">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+            </svg>
+            Copied!
+          `;
+          
+          setTimeout(() => {
+            button.style.backgroundColor = 'rgba(66, 133, 244, 0.1)';
+            button.style.color = '#4285f4';
+            button.innerHTML = `
+              <svg viewBox="0 0 24 24">
+                <path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 16H5V5h2v2h10V5h2v14z"/>
+              </svg>
+              Copy
+            `;
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy text: ', err);
+        }
+      }
+
+      function searchGoogle() {
+        const targetSentenceContent = document.querySelector('.target-sentence-content');
+        const text = targetSentenceContent.textContent;
+        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(text)}`;
+        window.open(searchUrl, '_blank');
+      }
+
+      // Add auto-resize functionality for textarea
+      const textarea = document.getElementById('queryInput');
+      textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+      });
     </script>
   </body>
 </html>

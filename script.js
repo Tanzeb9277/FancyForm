@@ -1,7 +1,7 @@
 function doGet() {
   return HtmlService.createHtmlOutputFromFile("Form")
     .setSandboxMode(HtmlService.SandboxMode.IFRAME)
-    .setTitle("Submit and Search")
+    .setTitle("FloorGPT")
 }
 
 function submitQuery(submissionData) {
@@ -12,7 +12,26 @@ function submitQuery(submissionData) {
   }
 
   const email = String(Session.getActiveUser().getEmail() || "anonymous").trim()
-  const query = String(submissionData.query).trim()
+  let query = String(submissionData.query).trim()
+  
+  // Check if the query contains "Raters' Comments" and route accordingly
+  if (query.includes("Raters' Comments")) {
+    query = extractTargetSentence(query)
+  } else {
+    query = extractTextBetweenPhrases(query)
+  }
+  
+  if (!query) {
+    return {
+      submitted: false,
+      message: "Could not extract valid query from the input.",
+      query: null,
+      qaRating: null
+    }
+  }
+
+  // Remove all line breaks and extra spaces
+  query = query.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
 
   // Get all data in the sheet
   const data = sheet.getDataRange().getValues()
@@ -238,3 +257,47 @@ function checkQARating(targetSentence = "Sponge Bob") {
     error: "No matching target sentence found in QARatings sheet"
   });
 }
+
+function extractTextBetweenPhrases(text, startPhrase="Question A", endPhrase = "A. To what extent is the Target Sentence") {
+  // Convert to lowercase for case-insensitive search
+  const lowerText = text.toLowerCase();
+  const lowerStart = startPhrase.toLowerCase();
+  const lowerEnd = endPhrase.toLowerCase();
+  
+  // Find the start and end positions
+  const startIndex = lowerText.indexOf(lowerStart);
+  const endIndex = lowerText.indexOf(lowerEnd);
+  
+  // If either phrase is not found, return null
+  if (startIndex === -1 || endIndex === -1) {
+    return null;
+  }
+  
+  // Extract the text between the phrases
+  // Add the length of the start phrase to get the position after it
+  const startPosition = startIndex + startPhrase.length;
+  const extractedText = text.substring(startPosition, endIndex).trim();
+  
+  return extractedText;
+}
+
+function extractTargetSentence(text) {
+  const startMarker = `Target Sentence 
+Raters' Comments
+Task Questions
+`;
+
+  const startIndex = text.indexOf(startMarker);
+  if (startIndex === -1) return null;
+
+  const afterStart = text.slice(startIndex + startMarker.length);
+
+  // Match until first triple newline (empty block)
+  const match = afterStart.match(/([\s\S]*?)(\n\s*\n\s*\n|$)/);
+  if (match) {
+    return match[1].trim();
+  }
+
+  return null;
+}
+
