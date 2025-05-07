@@ -13,25 +13,26 @@ function submitQuery(submissionData) {
 
   const email = String(Session.getActiveUser().getEmail() || "anonymous").trim()
   let query = String(submissionData.query).trim()
-  
   // Check if the query contains "Raters' Comments" and route accordingly
   if (query.includes("Raters' Comments")) {
     query = extractTargetSentence(query)
   } else {
     query = extractTextBetweenPhrases(query)
   }
-  
   if (!query) {
     return {
       submitted: false,
       message: "Could not extract valid query from the input.",
       query: null,
-      qaRating: null
+      qaRating: null,
     }
   }
 
   // Remove all line breaks and extra spaces
-  query = query.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim()
+  query = query
+    .replace(/[\r\n]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
 
   // Get all data in the sheet
   const data = sheet.getDataRange().getValues()
@@ -46,19 +47,16 @@ function submitQuery(submissionData) {
       const now = new Date()
       const date = Utilities.formatDate(now, "America/New_York", "yyyy-MM-dd")
       const time = Utilities.formatDate(now, "America/New_York", "HH:mm:ss")
-      
       // Update the date and time in the existing row
       sheet.getRange(i + 1, 1).setValue(date) // Update date in Column A
       sheet.getRange(i + 1, 2).setValue(time) // Update time in Column B
-      
       // Check QA rating for the query
       const qaRatingResult = JSON.parse(checkQARating(query))
-      
       return {
         submitted: true,
         message: "Existing query updated with new timestamp.",
         query: query,
-        qaRating: qaRatingResult
+        qaRating: qaRatingResult,
       }
     }
   }
@@ -71,233 +69,254 @@ function submitQuery(submissionData) {
 
   // Check QA rating for the new query
   const qaRatingResult = JSON.parse(checkQARating(query))
-  
   return {
     submitted: true,
     message: "Query submitted successfully!",
     query: query,
-    qaRating: qaRatingResult
+    qaRating: qaRatingResult,
   }
 }
 
 function findMatchingNamesFrontend(searchValue = "Bobs Burger") {
   // Get the spreadsheet and the specific sheet by name
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = "queryData"; // Specify the sheet name
-  const sheet = ss.getSheetByName(sheetName);
+  const ss = SpreadsheetApp.getActiveSpreadsheet()
+  const sheetName = "queryData" // Specify the sheet name
+  const sheet = ss.getSheetByName(sheetName)
 
   // Get the current user's email
-  const currentUserEmail = Session.getActiveUser().getEmail();
+  const currentUserEmail = Session.getActiveUser().getEmail()
 
   // Check if the sheet exists
   if (!sheet) {
-    return JSON.stringify({ error: `Sheet "${sheetName}" not found.` });
+    return JSON.stringify({ error: `Sheet "${sheetName}" not found.` })
   }
 
   // Define column indices
-  const SEARCH_COLUMN = 4;
-  const NAMES_COLUMN = 8;
-  const TIME_COLUMN = 2;
-  const EMAIL_COLUMN = 3; // Column C for email
+  const SEARCH_COLUMN = 4
+  const NAMES_COLUMN = 8
+  const TIME_COLUMN = 2
+  const EMAIL_COLUMN = 3 // Column C for email
 
-  const data = sheet.getDataRange().getValues();
-  const matchingEntries = []; // Changed from matchingNames to matchingEntries
-  const trimmedSearchValue = String(searchValue).trim().toLowerCase();
-  const now = new Date();
+  const data = sheet.getDataRange().getValues()
+  const matchingEntries = []
+  const trimmedSearchValue = String(searchValue).trim().toLowerCase()
+  const now = new Date()
 
   for (let i = 0; i < data.length; i++) {
-    const row = data[i];
+    const row = data[i]
     // Skip if the email matches the current user's email
     if (row[EMAIL_COLUMN - 1] === currentUserEmail) {
-      continue;
+      continue
     }
-    
+
     if (
       row.length > SEARCH_COLUMN - 1 &&
       row[SEARCH_COLUMN - 1] !== undefined &&
-      String(row[SEARCH_COLUMN - 1]).trim().toLowerCase() === trimmedSearchValue
+      String(row[SEARCH_COLUMN - 1])
+        .trim()
+        .toLowerCase() === trimmedSearchValue
     ) {
-      let timeValue = null;
-      if (typeof row[TIME_COLUMN - 1] === 'string') {
-        timeValue = row[TIME_COLUMN - 1];
-      } else if (row[TIME_COLUMN - 1] instanceof Date) {
-        // If it's interpreted as a Date, format it back to HH:mm:ss
-        timeValue = Utilities.formatDate(row[TIME_COLUMN - 1], Session.getTimeZone(), "HH:mm:ss");
-      }
+      let entryTime
+      const timeValue = row[TIME_COLUMN - 1]
 
-      if (timeValue) {
-        const parts = timeValue.split(':');
-        if (parts.length === 3) {
-          const entryHour = parseInt(parts[0], 10);
-          const entryMinute = parseInt(parts[1], 10);
-          const entrySecond = parseInt(parts[2], 10);
-
-          const currentHour = now.getHours();
-          const currentMinute = now.getMinutes();
-          const currentSecond = now.getSeconds();
-
-          const entryTimeInSeconds = entryHour * 3600 + entryMinute * 60 + entrySecond;
-          const currentTimeInSeconds = currentHour * 3600 + currentMinute * 60 + currentSecond;
-
-          const timeDifference = Math.abs(currentTimeInSeconds - entryTimeInSeconds);
-
-          if (timeDifference <= 2400) {
-            if (row.length > NAMES_COLUMN - 1 && row[NAMES_COLUMN - 1] !== undefined) {
-              matchingEntries.push({
-                name: row[NAMES_COLUMN - 1],
-                email: row[EMAIL_COLUMN - 1]
-              });
-            }
-          }
-          Logger.log(`Search: ${trimmedSearchValue}, Entry Time (Parsed): ${timeValue}, Diff: ${timeDifference}`);
-        } else {
-          Logger.log(`Warning: Invalid time format in Column B: ${timeValue}`);
+      if (timeValue instanceof Date) {
+        entryTime = timeValue
+      } else if (typeof timeValue === "string" && timeValue.trim() !== "") {
+        entryTime = new Date(timeValue)
+        if (isNaN(entryTime.getTime())) {
+          Logger.log(
+            `Warning: Could not parse date/time string in Column B: ${timeValue}`,
+          )
+          continue // Skip if parsing fails
         }
       } else {
-        Logger.log(`Skipping row ${i + 1}: Could not extract time from Column B.`);
-        Logger.log(`Value in Column B: ${row[TIME_COLUMN - 1]}`);
+        Logger.log(
+          `Skipping row ${i + 1}: Invalid date/time value in Column B.`,
+        )
+        Logger.log(`Value in Column B: ${timeValue}`)
+        continue // Skip if not a Date or a valid string
+      }
+
+      if (entryTime) {
+        const timeDifferenceMillis = now.getTime() - entryTime.getTime()
+        const secondsAgo = Math.round(timeDifferenceMillis / 1000)
+        const minutesAgo = Math.round(secondsAgo / 60)
+        const hoursAgo = Math.round(minutesAgo / 60)
+        const daysAgo = Math.round(hoursAgo / 24)
+
+        let relativeTime
+        if (daysAgo >= 1) {
+          relativeTime = `${daysAgo} day${daysAgo === 1 ? "" : "s"} ago`
+        } else if (hoursAgo >= 1) {
+          relativeTime = `${hoursAgo} hour${hoursAgo === 1 ? "" : "s"} ago`
+        } else if (minutesAgo >= 1) {
+          relativeTime = `${minutesAgo} minute${minutesAgo === 1 ? "" : "s"} ago`
+        } else {
+          relativeTime = `${secondsAgo} second${secondsAgo === 1 ? "" : "s"} ago`
+        }
+
+        if (
+          row.length > NAMES_COLUMN - 1 &&
+          row[NAMES_COLUMN - 1] !== undefined
+        ) {
+          matchingEntries.push({
+            name: row[NAMES_COLUMN - 1],
+            email: row[EMAIL_COLUMN - 1],
+            timestamp: relativeTime,
+          })
+        }
+        Logger.log(
+          `Search: ${trimmedSearchValue}, Entry Time: ${entryTime.toLocaleString()}, Relative: ${relativeTime}`,
+        )
       }
     }
   }
 
-  return JSON.stringify(matchingEntries);
+  return JSON.stringify(matchingEntries)
 }
 
 function flagTask(flagData) {
   // Get the spreadsheet and the specific sheet by name
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = "queryData";
-  const sheet = ss.getSheetByName(sheetName);
+  const ss = SpreadsheetApp.getActiveSpreadsheet()
+  const sheetName = "queryData"
+  const sheet = ss.getSheetByName(sheetName)
 
   if (!sheet) {
-    return JSON.stringify({ error: `Sheet "${sheetName}" not found.` });
+    return JSON.stringify({ error: `Sheet "${sheetName}" not found.` })
   }
 
   // Define column indices
-  const SEARCH_COLUMN = 4; // Column D for search query
-  const EMAIL_COLUMN = 3;  // Column C for email
-  const ID_COLUMN = 5;     // Column E for ID
-  const FLAG_COLUMN = 6;   // Column F for flag
+  const SEARCH_COLUMN = 4 // Column D for search query
+  const EMAIL_COLUMN = 3 // Column C for email
+  const ID_COLUMN = 5 // Column E for ID
+  const FLAG_COLUMN = 6 // Column F for flag
 
-  const data = sheet.getDataRange().getValues();
-  const trimmedTarget = String(flagData.targetSentence).trim().toLowerCase();
-  const trimmedEmail = String(Session.getActiveUser().getEmail()).trim().toLowerCase();
+  const data = sheet.getDataRange().getValues()
+  const trimmedTarget = String(flagData.targetSentence).trim().toLowerCase()
+  const trimmedEmail = String(Session.getActiveUser().getEmail())
+    .trim()
+    .toLowerCase()
 
   for (let i = 0; i < data.length; i++) {
-    const row = data[i];
-    const rowSearch = String(row[SEARCH_COLUMN - 1]).trim().toLowerCase();
-    const rowEmail = String(row[EMAIL_COLUMN - 1]).trim().toLowerCase();
+    const row = data[i]
+    const rowSearch = String(row[SEARCH_COLUMN - 1])
+      .trim()
+      .toLowerCase()
+    const rowEmail = String(row[EMAIL_COLUMN - 1])
+      .trim()
+      .toLowerCase()
 
     if (rowSearch === trimmedTarget && rowEmail === trimmedEmail) {
       // Update the ID and flag columns
-      sheet.getRange(i + 1, ID_COLUMN).setValue(flagData.taskId);
-      sheet.getRange(i + 1, FLAG_COLUMN).setValue(flagData.flag);
-      
-      return JSON.stringify({ 
-        success: true, 
+      sheet.getRange(i + 1, ID_COLUMN).setValue(flagData.taskId)
+      sheet.getRange(i + 1, FLAG_COLUMN).setValue(flagData.flag)
+      return JSON.stringify({
+        success: true,
         message: "Task flagged successfully",
-        row: i + 1
-      });
+        row: i + 1,
+      })
     }
   }
 
-  return JSON.stringify({ 
-    error: "No matching row found with the given target sentence and email"
-  });
+  return JSON.stringify({
+    error: "No matching row found with the given target sentence and email",
+  })
 }
 
 function checkQARating(targetSentence = "Sponge Bob") {
   // Get the spreadsheet and the specific sheet by name
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheetName = "QARatings";
-  const sheet = ss.getSheetByName(sheetName);
+  const ss = SpreadsheetApp.getActiveSpreadsheet()
+  const sheetName = "QARatings"
+  const sheet = ss.getSheetByName(sheetName)
 
   if (!sheet) {
-    return JSON.stringify({ error: `Sheet "${sheetName}" not found.` });
+    return JSON.stringify({ error: `Sheet "${sheetName}" not found.` })
   }
 
   // Define column indices
-  const TARGET_COLUMN = 1;  // Column A for target sentence
-  const RATING_COLUMN = 4;  // Column D for rating
-  const REASONING_COLUMN = 5; // Column E for QA reasoning
+  const TARGET_COLUMN = 1 // Column A for target sentence
+  const RATING_COLUMN = 4 // Column D for rating
+  const REASONING_COLUMN = 5 // Column E for QA reasoning
 
-  const data = sheet.getDataRange().getValues();
-  const trimmedTarget = String(targetSentence).trim().toLowerCase();
+  const data = sheet.getDataRange().getValues()
+  const trimmedTarget = String(targetSentence).trim().toLowerCase()
 
   for (let i = 0; i < data.length; i++) {
-    const row = data[i];
-    const rowTarget = String(row[TARGET_COLUMN - 1]).trim().toLowerCase();
+    const row = data[i]
+    const rowTarget = String(row[TARGET_COLUMN - 1])
+      .trim()
+      .toLowerCase()
 
     if (rowTarget === trimmedTarget) {
-      const rating = row[RATING_COLUMN - 1];
-      const reasoning = row[REASONING_COLUMN - 1];
+      const rating = row[RATING_COLUMN - 1]
+      const reasoning = row[REASONING_COLUMN - 1]
 
       if (!rating || rating === "") {
-        return JSON.stringify({ 
+        return JSON.stringify({
           status: "awaiting",
-          message: "Awaiting QA Rating"
-        });
+          message: "Awaiting QA Rating",
+        })
       } else {
-        Logger.log(JSON.stringify({ 
+        Logger.log(
+          JSON.stringify({
+            status: "rated",
+            rating: rating,
+            reasoning: reasoning || "",
+          }),
+        )
+        return JSON.stringify({
           status: "rated",
           rating: rating,
-          reasoning: reasoning || ""
-        }))
-        return JSON.stringify({ 
-          status: "rated",
-          rating: rating,
-          reasoning: reasoning || ""
-        });
-        
+          reasoning: reasoning || "",
+        })
       }
     }
   }
 
-  return JSON.stringify({ 
-    error: "No matching target sentence found in QARatings sheet"
-  });
+  return JSON.stringify({
+    error: "No matching target sentence found in QARatings sheet",
+  })
 }
 
-function extractTextBetweenPhrases(text, startPhrase="Question A", endPhrase = "A. To what extent is the Target Sentence") {
+function extractTextBetweenPhrases(
+  text,
+  startPhrase = "Question A",
+  endPhrase = "A. To what extent is the Target Sentence",
+) {
   // Convert to lowercase for case-insensitive search
-  const lowerText = text.toLowerCase();
-  const lowerStart = startPhrase.toLowerCase();
-  const lowerEnd = endPhrase.toLowerCase();
-  
+  const lowerText = text.toLowerCase()
+  const lowerStart = startPhrase.toLowerCase()
+  const lowerEnd = endPhrase.toLowerCase()
   // Find the start and end positions
-  const startIndex = lowerText.indexOf(lowerStart);
-  const endIndex = lowerText.indexOf(lowerEnd);
-  
+  const startIndex = lowerText.indexOf(lowerStart)
+  const endIndex = lowerText.indexOf(lowerEnd)
   // If either phrase is not found, return null
   if (startIndex === -1 || endIndex === -1) {
-    return null;
+    return null
   }
-  
   // Extract the text between the phrases
   // Add the length of the start phrase to get the position after it
-  const startPosition = startIndex + startPhrase.length;
-  const extractedText = text.substring(startPosition, endIndex).trim();
-  
-  return extractedText;
+  const startPosition = startIndex + startPhrase.length
+  const extractedText = text.substring(startPosition, endIndex).trim()
+  return extractedText
 }
 
 function extractTargetSentence(text) {
-  const startMarker = `Target Sentence 
+  const startMarker = `Target Sentence
 Raters' Comments
 Task Questions
-`;
+`
 
-  const startIndex = text.indexOf(startMarker);
-  if (startIndex === -1) return null;
+  const startIndex = text.indexOf(startMarker)
+  if (startIndex === -1) return null
 
-  const afterStart = text.slice(startIndex + startMarker.length);
+  const afterStart = text.slice(startIndex + startMarker.length)
 
   // Match until first triple newline (empty block)
-  const match = afterStart.match(/([\s\S]*?)(\n\s*\n\s*\n|$)/);
+  const match = afterStart.match(/([\s\S]*?)(\n\s*\n\s*\n|$)/)
   if (match) {
-    return match[1].trim();
+    return match[1].trim()
   }
 
-  return null;
+  return null
 }
-
