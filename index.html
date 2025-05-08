@@ -1158,19 +1158,14 @@
               queryText = tempDiv.innerText
             }
           } else {
-            // If no "Response:", look for marked elements after "User Query:"
-            const userQueryIndex = htmlContent.indexOf("User Query:")
+            // If no "Response:", look for highlighted text in the specific div
+            const tempDiv = document.createElement('div')
+            tempDiv.innerHTML = htmlContent
+            const targetDiv = tempDiv.querySelector('#editable-57_copy_sentence_html1')
             
-            if (userQueryIndex !== -1) {
-              // Get the content after "User Query:"
-              const afterUserQuery = htmlContent.substring(userQueryIndex + "User Query:".length)
-              
-              // Create a temporary div to parse the HTML
-              const tempDiv = document.createElement('div')
-              tempDiv.innerHTML = afterUserQuery
-              
-              // Find elements with mark tags
-              const markedElements = tempDiv.getElementsByTagName('mark')
+            if (targetDiv) {
+              // Find elements with mark tags within the target div
+              const markedElements = targetDiv.getElementsByTagName('mark')
               
               if (markedElements.length > 0) {
                 // Extract the text from marked elements
@@ -1180,11 +1175,11 @@
                   .replace(/\s+/g, ' ')
                   .trim()
               } else {
-                // If no mark tags found, keep the HTML formatting
-                queryText = htmlContent
+                // If no mark tags found, use the div's content
+                queryText = targetDiv.innerText
               }
             } else {
-              // If no "User Query:" found, keep the HTML formatting
+              // If target div not found, keep the HTML formatting
               queryText = htmlContent
             }
           }
