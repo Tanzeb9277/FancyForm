@@ -1164,18 +1164,26 @@
             const targetDiv = tempDiv.querySelector('#editable-57_copy_sentence_html1')
             
             if (targetDiv) {
-              // Find elements with mark tags within the target div
-              const markedElements = targetDiv.getElementsByTagName('mark')
+              // Find span elements with yellow background color
+              const highlightedSpans = Array.from(targetDiv.getElementsByTagName('span'))
+                .filter(span => {
+                  const style = window.getComputedStyle(span)
+                  return style.backgroundColor === 'rgb(255, 255, 0)' || 
+                         style.backgroundColor === 'yellow' ||
+                         span.style.backgroundColor === 'yellow' ||
+                         span.style.backgroundColor === '#ffff00' ||
+                         span.style.backgroundColor === 'rgb(255, 255, 0)'
+                })
               
-              if (markedElements.length > 0) {
-                // Extract the text from marked elements
-                queryText = Array.from(markedElements)
+              if (highlightedSpans.length > 0) {
+                // Extract the text from highlighted spans
+                queryText = highlightedSpans
                   .map(el => el.textContent)
                   .join(' ')
                   .replace(/\s+/g, ' ')
                   .trim()
               } else {
-                // If no mark tags found, use the div's content
+                // If no highlighted spans found, use the div's content
                 queryText = targetDiv.innerText
               }
             } else {
