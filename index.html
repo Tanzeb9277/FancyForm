@@ -1166,14 +1166,53 @@
           // Get the HTML content from the rich text input
           const queryInput = document.getElementById("queryInput")
           let queryText = queryInput.innerText // Get plain text content
+          const htmlContent = queryInput.innerHTML
 
           // Check if the text contains "Response:"
           if (queryText.includes("Response:")) {
-            // If it contains "Response:", strip all formatting and send plain text
-            queryText = queryText.replace(/\s+/g, ' ').trim() // Normalize whitespace
+            // Check if it also contains "Raters' Comments"
+            if (queryText.includes("Raters' Comments")) {
+              // If it contains both, get text from specific div
+              const tempDiv = document.createElement('div')
+              tempDiv.innerHTML = htmlContent
+              const targetDiv = tempDiv.querySelector('#editable-57_copy_sentence_html1')
+              queryText = targetDiv ? targetDiv.innerText : queryText
+            } else {
+              // If only "Response:" is present, strip formatting but preserve spaces and line breaks
+              const tempDiv = document.createElement('div')
+              tempDiv.innerHTML = htmlContent
+              queryText = tempDiv.innerText
+            }
           } else {
-            // If no "Response:", keep the HTML formatting
-            queryText = queryInput.innerHTML
+            // If no "Response:", look for marked elements after "User Query:"
+            const userQueryIndex = htmlContent.indexOf("User Query:")
+            
+            if (userQueryIndex !== -1) {
+              // Get the content after "User Query:"
+              const afterUserQuery = htmlContent.substring(userQueryIndex + "User Query:".length)
+              
+              // Create a temporary div to parse the HTML
+              const tempDiv = document.createElement('div')
+              tempDiv.innerHTML = afterUserQuery
+              
+              // Find elements with mark tags
+              const markedElements = tempDiv.getElementsByTagName('mark')
+              
+              if (markedElements.length > 0) {
+                // Extract the text from marked elements
+                queryText = Array.from(markedElements)
+                  .map(el => el.textContent)
+                  .join(' ')
+                  .replace(/\s+/g, ' ')
+                  .trim()
+              } else {
+                // If no mark tags found, keep the HTML formatting
+                queryText = htmlContent
+              }
+            } else {
+              // If no "User Query:" found, keep the HTML formatting
+              queryText = htmlContent
+            }
           }
 
           const formData = {
@@ -1712,29 +1751,62 @@
             pastedContent = await navigator.clipboard.readText()
           }
 
-          // Insert the content at cursor position or replace selection
-          const selection = window.getSelection()
-          const range = selection.getRangeAt(0)
-          range.deleteContents()
-          
-          if (pastedContent.startsWith('<')) {
-            // If it's HTML content, create a temporary container
-            const tempDiv = document.createElement('div')
-            tempDiv.innerHTML = pastedContent
-            const fragment = document.createDocumentFragment()
-            while (tempDiv.firstChild) {
-              fragment.appendChild(tempDiv.firstChild)
+          // For contenteditable div, we need to handle the paste differently
+          if (inputElement.isContentEditable) {
+            // Focus the input element if it's not already focused
+            inputElement.focus()
+            
+            // Get current selection or create a new one at the end
+            const selection = window.getSelection()
+            let range
+            
+            if (selection.rangeCount > 0) {
+              range = selection.getRangeAt(0)
+            } else {
+              range = document.createRange()
+              range.selectNodeContents(inputElement)
+              range.collapse(false) // collapse to end
+              selection.addRange(range)
             }
-            range.insertNode(fragment)
+            
+            // Delete any selected content
+            range.deleteContents()
+            
+            if (pastedContent.startsWith('<')) {
+              // If it's HTML content, create a temporary container
+              const tempDiv = document.createElement('div')
+              tempDiv.innerHTML = pastedContent
+              
+              // Insert each node from the temp div
+              while (tempDiv.firstChild) {
+                range.insertNode(tempDiv.firstChild)
+              }
+            } else {
+              // If it's plain text, insert as text node
+              range.insertNode(document.createTextNode(pastedContent))
+            }
+            
+            // Move cursor to end of inserted content
+            range.collapse(false)
+            selection.removeAllRanges()
+            selection.addRange(range)
           } else {
-            // If it's plain text, insert as text node
+            // For regular input elements, use the old method
+            const selection = window.getSelection()
+            let range
+            
+            if (selection.rangeCount > 0) {
+              range = selection.getRangeAt(0)
+            } else {
+              range = document.createRange()
+              range.selectNodeContents(inputElement)
+              range.collapse(false)
+              selection.addRange(range)
+            }
+            
+            range.deleteContents()
             range.insertNode(document.createTextNode(pastedContent))
           }
-
-          // Move cursor to end of inserted content
-          range.collapse(false)
-          selection.removeAllRanges()
-          selection.addRange(range)
 
           // Change to check icon
           clipboardIcon.style.display = "none"
@@ -1750,10 +1822,43 @@
           // Fallback to basic clipboard API if the new API fails
           try {
             const text = await navigator.clipboard.readText()
-            const selection = window.getSelection()
-            const range = selection.getRangeAt(0)
-            range.deleteContents()
-            range.insertNode(document.createTextNode(text))
+            if (inputElement.isContentEditable) {
+              // For contenteditable div
+              inputElement.focus()
+              const selection = window.getSelection()
+              let range
+              
+              if (selection.rangeCount > 0) {
+                range = selection.getRangeAt(0)
+              } else {
+                range = document.createRange()
+                range.selectNodeContents(inputElement)
+                range.collapse(false)
+                selection.addRange(range)
+              }
+              
+              range.deleteContents()
+              range.insertNode(document.createTextNode(text))
+              range.collapse(false)
+              selection.removeAllRanges()
+              selection.addRange(range)
+            } else {
+              // For regular input
+              const selection = window.getSelection()
+              let range
+              
+              if (selection.rangeCount > 0) {
+                range = selection.getRangeAt(0)
+              } else {
+                range = document.createRange()
+                range.selectNodeContents(inputElement)
+                range.collapse(false)
+                selection.addRange(range)
+              }
+              
+              range.deleteContents()
+              range.insertNode(document.createTextNode(text))
+            }
           } catch (fallbackErr) {
             console.error("Fallback clipboard read also failed: ", fallbackErr)
           }

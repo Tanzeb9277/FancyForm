@@ -13,12 +13,15 @@ function submitQuery(submissionData) {
 
   const email = String(Session.getActiveUser().getEmail() || "anonymous").trim()
   let query = String(submissionData.query).trim()
-  // Check if the query contains "Raters' Comments" and route accordingly
+  
+  // Check for different types of queries and route accordingly
   if (query.includes("Raters' Comments")) {
     query = extractTargetSentence(query)
-  } else {
+  } else if (query.includes("Target Sentence from the above response:")) {
     query = extractTextBetweenPhrases(query)
   }
+  // If neither condition is met, keep the query as is
+
   if (!query) {
     return {
       submitted: false,
@@ -302,21 +305,19 @@ function extractTextBetweenPhrases(
 }
 
 function extractTargetSentence(text) {
-  const startMarker = `Target Sentence
-Raters' Comments
-Task Questions
-`
-
+  const startMarker = "Target Sentence\nRaters' Comments\nTask Questions\n\n\n"
   const startIndex = text.indexOf(startMarker)
+  
   if (startIndex === -1) return null
 
+  // Get everything after the start marker
   const afterStart = text.slice(startIndex + startMarker.length)
-
-  // Match until first triple newline (empty block)
-  const match = afterStart.match(/([\s\S]*?)(\n\s*\n\s*\n|$)/)
-  if (match) {
-    return match[1].trim()
-  }
-
-  return null
+  
+  // Find the next triple line break
+  const endIndex = afterStart.indexOf("\n\n\n")
+  
+  if (endIndex === -1) return null
+  
+  // Extract the text between start marker and triple line break
+  return afterStart.slice(0, endIndex).trim()
 }
